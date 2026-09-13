@@ -20,12 +20,15 @@
     --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-  html,body{margin:0;height:100%;background:var(--navy);overflow:hidden;position:fixed;inset:0}
-  body{font-family:"Oswald","Arial Narrow",Impact,system-ui,sans-serif;color:var(--white);height:100dvh;width:100vw;--z:1}
-  /* #app is laid out at a phone-like logical size and scaled up to fill tablets and desktops */
-  #app{position:absolute;top:0;left:0;width:calc(100vw / var(--z));height:calc(100dvh / var(--z));transform:scale(var(--z));transform-origin:0 0;display:flex;flex-direction:column;overflow:hidden;
-       padding-top:calc((var(--safe-top) + 6px) / var(--z));padding-bottom:calc(var(--safe-bot) / var(--z));
+  html,body{margin:0;height:100%;background:var(--navy);overflow:hidden}
+  body{font-family:"Oswald","Arial Narrow",Impact,system-ui,sans-serif;color:var(--white);height:100dvh;width:100%;position:relative;--z:1}
+  /* Phones: #app simply fills the screen (no transform, so touch targets are exact).
+     Tablets/desktops: #app is laid out at a phone-like logical size and scaled up as one unit. */
+  #app{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;
+       padding-top:calc(var(--safe-top) + 6px);padding-bottom:var(--safe-bot);
        background:linear-gradient(180deg,#123059 0%,#0c2340 45%,#071a30 100%)}
+  #app.scaled{width:calc(100% / var(--z));height:calc(100% / var(--z));transform:scale(var(--z));transform-origin:0 0;
+       padding-top:calc((var(--safe-top) + 6px) / var(--z));padding-bottom:calc(var(--safe-bot) / var(--z))}
   header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;gap:10px}
   .brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;overflow:hidden}
   .brand .t{min-width:0;overflow:hidden}
@@ -360,7 +363,9 @@ function fitApp(){
   const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
   // phone-sized logical layout (430 x 860) scaled up until it fills the shorter dimension; never below 1
   let z=Math.min(vw/430, vh/860); z=Math.max(1, Math.min(z, 2.6));
+  if(z<1.08) z=1;                      // phones: no transform at all
   Z=z; document.body.style.setProperty('--z', z);
+  document.getElementById('app').classList.toggle('scaled', z>1);
 }
 const cv = document.getElementById('field'), ctx = cv.getContext('2d');
 const fw = document.querySelector('.fieldwrap');
@@ -368,14 +373,14 @@ let W=300,H=400, dpr=window.devicePixelRatio||1;
 const VIEW_ROUTES={w:30,h:24,y0:-2.5}, VIEW_PLAYS={w:36,h:21,y0:-7.5}; let view=VIEW_ROUTES; let YARDS_W=30, YARDS_H=24;
 function sizeCanvas(){
   YARDS_W=view.w; YARDS_H=view.h;
-  const rect = fw.getBoundingClientRect(); if(rect.height<40) return;
-  const rw=rect.width/Z, rh=rect.height/Z;   // logical (pre-scale) size
+  const rw=fw.clientWidth, rh=fw.clientHeight;   // layout size in the app's own (unscaled) pixels
+  if(rh<40) return;
   let h = rh, w = h*(YARDS_W/YARDS_H);
   if (w>rw){ w=rw; h=w*(YARDS_H/YARDS_W); }
   W=Math.floor(w); H=Math.floor(h);
   cv.style.width=W+'px'; cv.style.height=H+'px';
   cv.width=Math.round(W*dpr*Z); cv.height=Math.round(H*dpr*Z); ctx.setTransform(dpr*Z,0,0,dpr*Z,0,0);
-  const cf=document.getElementById('confetti'); cf.width=Math.round(rect.width*dpr); cf.height=Math.round(rect.height*dpr);
+  const cf=document.getElementById('confetti'); cf.width=Math.round(rw*dpr*Z); cf.height=Math.round(rh*dpr*Z);
   draw();
 }
 let side='L';                                  // current field orientation
