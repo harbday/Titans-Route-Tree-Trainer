@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0c2340">
+<meta name="theme-color" content="#071a30">
 <title>Titans Playbook</title>
 <meta name="apple-mobile-web-app-title" content="Titans Playbook">
 <meta name="application-name" content="Titans Playbook">
@@ -20,7 +20,7 @@
     --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-  html,body{margin:0;height:100%;background:var(--navy);overflow:hidden}
+  html,body{margin:0;height:100%;background:#071a30;overflow:hidden}
   body{font-family:"Oswald","Arial Narrow",Impact,system-ui,sans-serif;color:var(--white);height:100dvh;width:100%;position:relative;--z:1}
   /* Phones: #app simply fills the screen (no transform, so touch targets are exact).
      Tablets/desktops: #app is laid out at a phone-like logical size and scaled up as one unit. */
@@ -771,6 +771,14 @@ window.addEventListener('orientationchange', ()=>setTimeout(()=>{ fitApp(); size
 new ResizeObserver(()=>sizeCanvas()).observe(fw);
 document.fonts && document.fonts.ready.then(draw);
 fitApp(); buildRoster(); renderNav(); showTree(); sizeCanvas(); updateScore();
+if(/debug=1/.test(location.search)){
+  const d=document.createElement('div'); d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:999;background:rgba(0,0,0,.75);color:#0f0;font:11px/1.4 monospace;padding:6px 8px;border-radius:6px;pointer-events:none;white-space:pre';
+  document.body.appendChild(d);
+  const probe=document.createElement('div'); probe.style.cssText='position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);visibility:hidden'; document.body.appendChild(probe);
+  const upd=()=>{ const cs=getComputedStyle(probe); const app=document.getElementById('app').getBoundingClientRect();
+    d.textContent=`standalone: ${!!navigator.standalone}\ninnerH: ${innerHeight}  clientH: ${document.documentElement.clientHeight}\nvisualVP: ${visualViewport?Math.round(visualViewport.height):'-'} offTop: ${visualViewport?Math.round(visualViewport.offsetTop):'-'}\nscreen: ${screen.width}x${screen.height}\nsafe top/bot: ${cs.paddingTop} / ${cs.paddingBottom}\napp rect: top ${Math.round(app.top)} h ${Math.round(app.height)} w ${Math.round(app.width)}\nZ: ${Z}`; };
+  upd(); addEventListener('resize',upd); visualViewport&&visualViewport.addEventListener('resize',upd); setInterval(upd,1500);
+}
 </script>
 </body>
 </html>
